@@ -1,0 +1,49 @@
+version: '3.9'
+
+networks:
+  app-net:
+    driver: bridge
+
+volumes:
+  db-data:
+
+services:
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - app-net
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - database
+    networks:
+      - app-net
+    restart: unless-stopped
+    environment:
+      - DB_HOST=database
+      - DB_PORT=5432
+      - DB_NAME=myappdb
+      - DB_USER=myappuser
+      - DB_PASSWORD=myapppassword
+
+  database:
+    image: postgres:16-alpine
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - app-net
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=myappdb
+      - POSTGRES_USER=myappuser
+      - POSTGRES_PASSWORD=myapppassword
+
