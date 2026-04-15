@@ -7,7 +7,6 @@ on:
 jobs:
   build-and-scan:
     runs-on: ubuntu-latest
-    # This addresses the Node 20 warning
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     
@@ -15,15 +14,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build Backend Image
-        run: docker build -t my-backend:latest ./backend
+      - name: Build Images
+        run: |
+          docker build -t my-backend:latest ./backend
+          docker build -t my-frontend:latest ./frontend
 
-      - name: Run Trivy scanner
+      - name: Scan Backend
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'my-backend:latest'
           format: 'table'
-          # We'll keep exit-code 1 to stay secure!
-          exit-code: '1'
-          ignore-unfixed: true
+          exit-code: '0' 
+          severity: 'CRITICAL,HIGH'
+
+      - name: Scan Frontend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'my-frontend:latest'
+          format: 'table'
+          exit-code: '0'
           severity: 'CRITICAL,HIGH'
