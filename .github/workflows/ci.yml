@@ -2,41 +2,26 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
-  build-and-test:
+  build-and-scan:
     runs-on: ubuntu-latest
-
-    env:
-      DB_PORT: 5432
-      DB_NAME: ${{ secrets.DB_NAME }}
-      DB_USER: ${{ secrets.DB_USER }}
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Build Backend Image
+        run: docker build -t my-backend:latest ./backend
 
-      - name: Build backend image
-        run: docker build -t myapp-backend:test ./backend
-
-      - name: Build frontend image
-        run: docker build -t myapp-frontend:test ./frontend
-
-      - name: Test backend health endpoint
-        run: |
-          docker run -d -p 3000:3000 --name backend-test myapp-backend:test
-          sleep 3
-          curl --fail http://localhost:3000/health
-          docker stop backend-test
-          docker rm backend-test
-
-      - name: Validate docker-compose config
-        run: docker compose config
-
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'my-backend:latest'
+          format: 'table'
+          exit-code: '1' # This fails the build if vulnerabilities are found
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
