@@ -7,40 +7,45 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-   
-    
+
     steps:
-      - name: Deploying to Azure VM via SSH
+      - name: Set image tag
+        run: echo "IMAGE_TAG=${{ github.sha }}" >> $GITHUB_ENV
+
+      - name: Deploy to Azure VM via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSHKEY }}
           script: |
-            # 1. Enter the Deployment Directory
             cd ~/my-3tier-app
-            
-            # 2. Sync with the latest code from GitHub
-            git pull origin main 
 
-            # 3. THE ASSEMBLER: Delete old local folders and clone fresh 
-          
-            rm -rf frontend backend
-            git clone https://github.com/2003dinijay/my-app-frontend.git frontend
-            git clone https://github.com/2003dinijay/my-app-backend.git backend
+            # Login to ACR
+            echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ secrets.ACR_NAME }}.azurecr.io \
+              -u ${{ secrets.ACR_USERNAME }} --password-stdin
 
-            # 4. Deploy the 3-Tier System
-            docker compose up -d --build
-            
-            # 5. Cleanup old images to save Azure disk space
+            # Pull BOTH images
+            docker pull ${{ secrets.ACR_NAME }}.azurecr.io/frontend:${{ github.sha }}
+            docker pull ${{ secrets.ACR_NAME }}.azurecr.io/backend:${{ github.sha }}
+
+            # Export variables for docker-compose
+            export IMAGE_TAG=${{ github.sha }}
+            export ACR_NAME=${{ secrets.ACR_NAME }}
+
+            # Deploy (no build)
+            docker compose up -d
+
+            # Cleanup
             docker image prune -f
+
       - name: Notify Discord on Success
         if: success()
         uses: sarisia/actions-status-discord@v1
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK }}
           status: ${{ job.status }}
-          content: "🚀 **Deployment Successful!** App is live at http://40.81.30.7:8080"
+          content: "🚀 Deployment Successful! Version: ${{ github.sha }}"
           title: "CD Pipeline Result"
           color: 0x00ff00
 
@@ -50,7 +55,6 @@ jobs:
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK }}
           status: ${{ job.status }}
-          content: "⚠️ **Deployment Failed!** Check GitHub Actions logs for details."
+          content: "⚠️ Deployment Failed! Check logs."
           title: "CD Pipeline Result"
           color: 0xff0000
-  

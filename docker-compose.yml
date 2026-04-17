@@ -8,13 +8,13 @@ volumes:
 services:
   frontend:
     # Pulling the pre-built image from ACR
-    image: ${ACR_NAME}.azurecr.io/my-frontend:latest
+    image: ${ACR_NAME}.azurecr.io/frontend:latest
     ports:
       - "8080:80"
     depends_on:
       - backend
     networks:
-      - app-net
+      - app-nets
     restart: unless-stopped
 
   backend:
