@@ -44,3 +44,23 @@ jobs:
 
             # 5. Clean up old, unused images to save VM storage (Step 3)
             docker image prune -f
+      - name: Notify Discord on Success
+        if: success()
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          status: ${{ job.status }}
+          content: "🚀 **Deployment Successful!** App is live at http://40.81.30.7:8080"
+          title: "CD Pipeline Result"
+          color: 0x00ff00
+
+      - name: Notify Discord on Failure
+        if: failure()
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          status: ${{ job.status }}
+          content: "⚠️ **Deployment Failed!** Check GitHub Actions logs for details."
+          title: "CD Pipeline Result"
+          color: 0xff0000
+  
