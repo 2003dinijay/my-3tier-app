@@ -20,29 +20,22 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSHKEY }}
           script: |
-            # 1. Create and Enter the application directory
-            mkdir -p ~/my-3tier-app
+            # 1. Enter the Deployment Directory
             cd ~/my-3tier-app
+            
+            # 2. Update the Orchestration files (docker-compose, .env)
+            git pull origin main 
 
-            # 2. Clone the repo if missing, otherwise pull the latest changes
-            if [ ! -d ".git" ]; then
-              git clone https://github.com/${{ github.repository }} .
-            else
-              git pull origin main
-            fi
+            # 3. THE ASSEMBLER: Delete old local folders and clone fresh 
+            # from the 'Source of Truth' (your 2 new repos)
+            rm -rf frontend backend
+            git clone https://github.com/2003dinijay/my-app-frontend.git frontend
+            git clone https://github.com/2003dinijay/my-app-backend.git backend
 
-            # 3. Create .env file dynamically (Step 5: Secrets Management)
-            # This pulls from your GitHub Secrets and creates the file on the VM
-            echo "DB_NAME=${{ secrets.DB_NAME }}" > .env
-            echo "DB_USER=${{ secrets.DB_USER }}" >> .env
-            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-            echo "DB_PORT=5432" >> .env
-
-            # 4. Deploy/Restart the containers (Step 7 & 11)
-            # --build ensures fresh images are created if the code changed
+            # 4. Deploy the 3-Tier System
             docker compose up -d --build
-
-            # 5. Clean up old, unused images to save VM storage (Step 3)
+            
+            # 5. Cleanup old images to save Azure disk space
             docker image prune -f
       - name: Notify Discord on Success
         if: success()
