@@ -6,9 +6,9 @@ volumes:
   db-data:
 
 services:
-
   frontend:
-    build: ./frontend
+    # Pulling the pre-built image from ACR
+    image: ${ACR_NAME}.azurecr.io/my-frontend:latest
     ports:
       - "8080:80"
     depends_on:
@@ -18,7 +18,8 @@ services:
     restart: unless-stopped
 
   backend:
-    build: ./backend
+   
+    image: ${ACR_NAME}.azurecr.io/backend:latest
     ports:
       - "3000:3000"
     depends_on:
@@ -44,4 +45,3 @@ services:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
-
