@@ -2,36 +2,45 @@ name: CD - Deploy to Azure
 
 on:
   workflow_run:
-    workflows: ["CI Pipeline"] # Only runs if your CI (Scans/Builds) succeeds
+    workflows: ["CI Pipeline"] # Ensures CD only triggers after CI Success
     types:
       - completed
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Only run this job if the CI Pipeline actually passed
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
     steps:
-      - name: Deploying to Azure VM
+      - name: Deploying to Azure VM via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSHKEY }}
           script: |
-            # 1. Create app directory
+            # 1. Create and Enter the application directory
             mkdir -p ~/my-3tier-app
             cd ~/my-3tier-app
 
-            # 2. Clone or Update code
+            # 2. Clone the repo if missing, otherwise pull the latest changes
             if [ ! -d ".git" ]; then
               git clone https://github.com/${{ github.repository }} .
             else
               git pull origin main
             fi
 
-            # 3. Deploy/Restart the containers (Step 7 & 11)
-            # This uses the --build flag to ensure fresh images are used
+            # 3. Create .env file dynamically (Step 5: Secrets Management)
+            # This pulls from your GitHub Secrets and creates the file on the VM
+            echo "DB_NAME=${{ secrets.DB_NAME }}" > .env
+            echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+            echo "DB_PORT=5432" >> .env
+
+            # 4. Deploy/Restart the containers (Step 7 & 11)
+            # --build ensures fresh images are created if the code changed
             docker compose up -d --build
 
-            # 4. Clean up old, unused images to save VM space (Step 3)
+            # 5. Clean up old, unused images to save VM storage (Step 3)
             docker image prune -f
