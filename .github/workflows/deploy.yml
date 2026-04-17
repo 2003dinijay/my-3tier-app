@@ -20,11 +20,11 @@ jobs:
             # 1. Enter the Deployment Directory
             cd ~/my-3tier-app
             
-            # 2. Update the Orchestration files (docker-compose, .env)
+            # 2. Sync with the latest code from GitHub
             git pull origin main 
 
             # 3. THE ASSEMBLER: Delete old local folders and clone fresh 
-            # from the 'Source of Truth' (your 2 new repos)
+          
             rm -rf frontend backend
             git clone https://github.com/2003dinijay/my-app-frontend.git frontend
             git clone https://github.com/2003dinijay/my-app-backend.git backend
