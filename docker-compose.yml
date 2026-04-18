@@ -14,16 +14,13 @@ services:
 
   backend:
    
-    image: ${ACR_NAME}.azurecr.io/backend:latest
+    backend:
+    image: acrmyappdevcentralindia001.azurecr.io/backend:latest
     ports:
       - "3000:3000"
-    depends_on:
-      - database
-    networks:
-      - app-net
-    restart: unless-stopped
     environment:
-      - MONGODB_URI=${MONGODB_URI}
+      - MONGODB_URI=mongodb+srv://dinijayo_db_user:dinijayo_db_user@cluster0.gkwvi5d.mongodb.net/todo_db?retryWrites=true&w=majority
+    restart: always
 
   database:
     image: mongo:latest
