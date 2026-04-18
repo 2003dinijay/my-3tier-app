@@ -1,49 +1,28 @@
+version: '3.8'
+
 networks:
   app-net:
     driver: bridge
 
-volumes:
-  db-data:
-
 services:
   frontend:
-    # Pulling the pre-built image from ACR
     image: ${ACR_NAME}.azurecr.io/frontend:latest
     ports:
-      - "8080:80"
+      - "8080:3000"  # Next.js runs on 3000, mapped to 8080 for the browser
     depends_on:
       - backend
     networks:
-      - app-nets
+      - app-net
     restart: unless-stopped
 
   backend:
-   
     image: ${ACR_NAME}.azurecr.io/backend:latest
     ports:
       - "3000:3000"
-    depends_on:
-      - database
     networks:
       - app-net
     restart: unless-stopped
     environment:
-      - DB_HOST=database
-      - DB_PORT=${DB_PORT}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - MONGODB_URI=${MONGODB_URI}
 
-  database:
-    image: mongo:latest
-    volumes:
-      - mongo-data:/data/db
-    networks:
-      - app-net
-    restart: unless-stopped
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=${DB_USER}
-      - MONGO_INITDB_ROOT_PASSWORD=${DB_PASSWORD}
-
-  volumes:
-    mongo-data:
+# Note: The 'database' service and 'volumes' are removed because your data is now in MongoDB Atlas.
