@@ -35,13 +35,15 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
 
   database:
-    image: postgres:16-alpine
+    image: mongo:latest
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - mongo-data:/data/db
     networks:
       - app-net
     restart: unless-stopped
     environment:
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - MONGO_INITDB_ROOT_USERNAME=${DB_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${DB_PASSWORD}
+
+  volumes:
+    mongo-data:
