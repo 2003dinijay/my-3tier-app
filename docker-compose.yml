@@ -6,7 +6,7 @@ networks:
 
 services:
   frontend:
-    image: ${ACR_NAME}.azurecr.io/frontend:latest
+    image: ${ACR_NAME}.azurecr.io/frontend:${IMAGE_TAG:-latest}
     ports:
       - "8080:3000"  # Next.js runs on 3000, mapped to 8080 for the browser
     depends_on:
@@ -14,9 +14,11 @@ services:
     networks:
       - app-net
     restart: unless-stopped
+    environment:
+      - BACKEND_URL=http://backend:3000
 
   backend:
-    image: ${ACR_NAME}.azurecr.io/backend:latest
+    image: ${ACR_NAME}.azurecr.io/backend:${IMAGE_TAG:-latest}
     ports:
       - "3000:3000"
     networks:
@@ -25,4 +27,4 @@ services:
     environment:
       - MONGODB_URI=${MONGODB_URI}
 
-# Note: The 'database' service and 'volumes' are removed because your data is now in MongoDB Atlas.
+# Note: The 'database' service and 'volumes' are removed because data is in MongoDB Atlas.

@@ -36,6 +36,7 @@ jobs:
             # Export variables for docker-compose
             export IMAGE_TAG=${{ github.sha }}
             export ACR_NAME=${{ secrets.ACR_NAME }}
+            export MONGODB_URI="${{ secrets.MONGODB_URI }}"
 
             # Deploy (no build)
             docker compose up -d
