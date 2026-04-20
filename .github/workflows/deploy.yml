@@ -25,6 +25,9 @@ jobs:
           script: |
             cd ~/my-3tier-app
 
+            # ✅ Pull latest config (docker-compose.yml, etc.)
+            git pull origin main
+
             # Login to ACR
             echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ secrets.ACR_NAME }}.azurecr.io \
               -u ${{ secrets.ACR_USERNAME }} --password-stdin
@@ -39,7 +42,7 @@ jobs:
             export MONGODB_URI="${{ secrets.MONGODB_URI }}"
 
             # Deploy (no build)
-            docker compose up -d
+            docker compose up -d --remove-orphans
 
             # Cleanup
             docker image prune -f
