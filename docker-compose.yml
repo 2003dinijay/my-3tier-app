@@ -26,5 +26,6 @@ services:
     restart: unless-stopped
     environment:
       - MONGODB_URI=${MONGODB_URI}
+      - PORT=3000
 
 # Note: The 'database' service and 'volumes' are removed because data is in MongoDB Atlas.
